@@ -1,0 +1,364 @@
+import React, { useEffect, useRef, useState } from 'react';
+import {
+  View,
+  Text,
+  StyleSheet,
+  TouchableOpacity,
+  Animated,
+} from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { useTheme } from '../theme';
+import { ThemeSelector } from './ThemeSelector';
+import Icon from 'react-native-vector-icons/Feather';
+
+type AppBarProps = {
+  isLoggedIn: boolean;
+  onLoginPress: () => void;
+  onSignupPress: () => void;
+  onProfilePress: () => void;
+  onNotificationsPress: () => void;
+  onLogoutPress: () => void;
+  onOpenTerms?: () => void;
+};
+
+export function AppBar({
+  isLoggedIn,
+  onLoginPress,
+  onSignupPress,
+  onProfilePress,
+  onNotificationsPress,
+  onLogoutPress,
+  onOpenTerms,
+}: AppBarProps) {
+  const insets = useSafeAreaInsets();
+  const { colors, spacing, typography, themeMode, setThemeMode } = useTheme();
+
+  const [menuOpen, setMenuOpen] = useState(false);
+  const menuAnim = useRef(new Animated.Value(0)).current;
+
+  useEffect(() => {
+    Animated.spring(menuAnim, {
+      toValue: menuOpen ? 1 : 0,
+      useNativeDriver: true,
+      friction: 8,
+      tension: 120,
+    }).start();
+  }, [menuOpen, menuAnim]);
+
+  const menuTranslateY = menuAnim.interpolate({
+    inputRange: [0, 1],
+    outputRange: [-8, 0],
+  });
+
+  return (
+    <View
+      style={[
+        styles.wrapper,
+        {
+          paddingTop: insets.top + spacing.sm,
+          paddingHorizontal: spacing.lg,
+          backgroundColor: colors.background,
+          borderBottomColor: colors.border,
+        },
+      ]}
+    >
+      <View style={[styles.barRow, { paddingBottom: spacing.sm }]}>
+        <View style={styles.logoRow}>
+          <View style={[styles.logoIcon, { backgroundColor: colors.primary }]}>
+            <Text style={styles.logoEmoji}>🛠</Text>
+          </View>
+          <Text style={[styles.brand, { color: colors.foreground }]}>
+            Fix4Ever
+          </Text>
+        </View>
+        <View style={styles.actionsRow}>
+          
+          
+          {isLoggedIn ? (
+            <>
+              <View style={[styles.menuItem, { paddingVertical: 8 }]}>
+                <ThemeSelector
+                  currentMode={themeMode}
+                  onModeChange={(mode) => {
+                    setThemeMode(mode);
+                  }}
+                  isCompact={false}
+                />
+              </View>
+                    <TouchableOpacity
+                onPress={onNotificationsPress}
+                activeOpacity={0.8}
+                style={[
+                  styles.iconButton,
+                  { backgroundColor: `${colors.primary}10` },
+                ]}
+              >
+            <Icon name="bell" size={18} color={colors.primary} />
+          </TouchableOpacity>
+            <TouchableOpacity
+              onPress={() => setMenuOpen(v => !v)}
+              activeOpacity={0.8}
+              style={[
+                styles.profileAvatar,
+                { borderColor: colors.primary, backgroundColor: colors.card },
+              ]}
+            >
+              <Icon name="user" size={18} color={colors.primary} />
+            </TouchableOpacity>
+            </>
+            
+          ) : (
+            <>
+              <TouchableOpacity
+                onPress={onLoginPress}
+                activeOpacity={0.8}
+                style={[
+                  styles.chip,
+                  {
+                    borderColor: colors.border,
+                    backgroundColor: colors.card,
+                  },
+                ]}
+              >
+                <Icon
+                  name="log-in"
+                  size={14}
+                  color={colors.mutedForeground}
+                  style={styles.chipIcon}
+                />
+                <Text
+                  style={[
+                    typography.label,
+                    styles.chipText,
+                    { color: colors.mutedForeground },
+                  ]}
+                >
+                  Log in
+                </Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                onPress={onSignupPress}
+                activeOpacity={0.9}
+                style={[
+                  styles.chip,
+                  {
+                    backgroundColor: colors.primary,
+                    borderColor: colors.primary,
+                  },
+                ]}
+              >
+                <Icon
+                  name="user-plus"
+                  size={14}
+                  color={colors.primaryForeground}
+                  style={styles.chipIcon}
+                />
+                <Text
+                  style={[
+                    typography.label,
+                    styles.chipText,
+                    { color: colors.primaryForeground },
+                  ]}
+                >
+                  Sign up
+                </Text>
+              </TouchableOpacity>
+            </>
+          )}
+          
+        </View>
+      </View>
+      {isLoggedIn && (
+        <Animated.View
+          pointerEvents={menuOpen ? 'auto' : 'none'}
+          style={[
+            styles.dropdown,
+            {
+              opacity: menuAnim,
+              transform: [{ translateY: menuTranslateY }],
+              backgroundColor: colors.card,
+              borderColor: colors.border,
+            },
+          ]}
+        >
+          <TouchableOpacity
+            style={styles.menuItem}
+            activeOpacity={0.8}
+            onPress={() => {
+              setMenuOpen(false);
+              onProfilePress();
+            }}
+          >
+            <Icon
+              name="user"
+              size={16}
+              color={colors.foreground}
+              style={styles.menuIcon}
+            />
+            <Text style={[typography.bodySmall, styles.menuText]}>
+              Profile & settings
+            </Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={styles.menuItem}
+            activeOpacity={0.8}
+            onPress={() => {
+              setMenuOpen(false);
+              onNotificationsPress();
+            }}
+          >
+            <Icon
+              name="bell"
+              size={16}
+              color={colors.foreground}
+              style={styles.menuIcon}
+            />
+            <Text style={[typography.bodySmall, styles.menuText]}>
+              Notifications
+            </Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={styles.menuItem}
+            activeOpacity={0.8}
+            onPress={() => {
+              setMenuOpen(false);
+              onOpenTerms?.();
+            }}
+          >
+            <Icon
+              name="file-text"
+              size={16}
+              color={colors.foreground}
+              style={styles.menuIcon}
+            />
+            <Text style={[typography.bodySmall, styles.menuText]}>
+              Terms & policies
+            </Text>
+          </TouchableOpacity>
+          <View style={styles.menuDivider} />
+          <TouchableOpacity
+            style={styles.menuItem}
+            activeOpacity={0.8}
+            onPress={() => {
+              setMenuOpen(false);
+              onLogoutPress();
+            }}
+          >
+            <Icon
+              name="log-out"
+              size={16}
+              color={colors.destructive ?? colors.primary}
+              style={styles.menuIcon}
+            />
+            <Text
+              style={[
+                typography.bodySmall,
+                styles.menuText,
+                { color: colors.destructive ?? colors.primary },
+              ]}
+            >
+              Log out
+            </Text>
+          </TouchableOpacity>
+        </Animated.View>
+      )}
+    </View>
+  );
+}
+
+const styles = StyleSheet.create({
+  wrapper: {
+    borderBottomWidth: 1,
+  },
+  barRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
+  actionsRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  logoRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+  },
+  logoIcon: {
+    width: 36,
+    height: 36,
+    borderRadius: 10,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  logoEmoji: { fontSize: 20 },
+  brand: {
+    fontSize: 20,
+    fontWeight: '700',
+    letterSpacing: -0.3,
+  },
+  iconButton: {
+    width: 34,
+    height: 34,
+    borderRadius: 17,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  profileAvatar: {
+    width: 34,
+    height: 34,
+    borderRadius: 17,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 1,
+    marginLeft: 4,
+  },
+  chip: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    borderRadius: 999,
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderWidth: 1,
+    marginLeft: 8,
+  },
+  chipIcon: {
+    marginRight: 6,
+  },
+  chipText: {
+    fontSize: 13,
+  },
+  dropdown: {
+    position: 'absolute',
+    top: 45,
+    zIndex: 1000,
+    right: 5,
+    marginTop: 4,
+    alignSelf: 'flex-end',
+    borderRadius: 12,
+    borderWidth: 1,
+    paddingVertical: 6,
+    paddingHorizontal: 10,
+    shadowColor: '#000',
+    shadowOpacity: 0.06,
+    shadowRadius: 8,
+    shadowOffset: { width: 0, height: 4 },
+    elevation: 4,
+  },
+  menuItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: 6,
+  },
+  menuIcon: {
+    marginRight: 8,
+  },
+  menuText: {
+    fontSize: 13,
+  },
+  menuDivider: {
+    height: StyleSheet.hairlineWidth,
+    marginVertical: 4,
+  },
+});

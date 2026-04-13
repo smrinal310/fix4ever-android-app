@@ -1,0 +1,32 @@
+# Dependencies
+node_modules/
+package-lock.json
+yarn.lock
+
+# Build output
+android/
+ios/
+.expo/
+dist/
+build/
+**/.cxx/
+
+# Cache
+.cache/
+*.tsbuildinfo
+
+# Generated files
+coverage/
+.nyc_output/
+
+# Misc
+*.log
+.DS_Store
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+# react-native-config codegen
+ios/tmp.xcconfig
+SETUP_GUIDE.md

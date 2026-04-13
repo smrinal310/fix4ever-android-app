@@ -1,0 +1,381 @@
+import React, { useEffect, useMemo, useState } from 'react';
+import {
+  View,
+  Text,
+  TouchableOpacity,
+  TextInput,
+  ScrollView,
+  StyleSheet,
+  ViewStyle,
+  TextStyle,
+} from 'react-native';
+import { useTheme } from '../../../core/theme';
+
+import { BottomSheetModal, BottomSheetModalProvider } from '@gorhom/bottom-sheet';
+import { ProblemPickerSheet } from './ProblemPickerSheet';
+
+import { request, requestWithAuth } from '../../../core/api';
+
+import { FormData } from '../ServiceRequestStack';
+
+interface ApiResponse<T = any> {
+  success: boolean;
+  data: T;
+  message?: string;
+}
+
+interface ProblemStepScreenProps {
+  formData: FormData;
+  updateFormData: (field: keyof FormData, value: any) => void;
+  errors: Record<string, string>;
+  onNext: () => void;
+  onBack: () => void;
+}
+
+export function ProblemStepScreen({
+  formData,
+  updateFormData,
+  errors,
+  onNext,
+  onBack,
+}: ProblemStepScreenProps) {
+  const { colors, spacing, typography } = useTheme();
+
+  const [mainProblemCategories, setMainProblemCategories] = useState([]);
+
+  const [isMainProblemSelected, setIsMainProblemSelected] = useState(false);
+
+  const [isSelectingMainProblem, setIsSelectingMainProblem] = useState(false);
+  
+  const [subProblemCategories, setSubProblemCategories] = useState([]);
+
+  const [isSubProblemSelected, setIsSubProblemSelected] = useState(false);
+
+  const [isSelectingSubProblem, setIsSelectingSubProblem] = useState(false);
+
+  const [relationalBehaviors, setRelationalBehaviors] = useState([]);
+
+  const [isSelectingRelationalBehavior, setIsSelectingRelationalBehavior] = useState(false);
+
+  const [problems, setProblems] = useState([]);
+
+  
+  const [sheetTitle, setSheetTitle] = useState("Select Problem Category");
+  const [selectedValue, setSelectedValue] = useState("")
+
+  const [formField, setFormField] = useState("");
+
+  const problemSheetRef = React.useRef<BottomSheetModal>(null);
+
+  const getMainProblemCategories = async () => {
+    try {
+      const response = await request<ApiResponse<any>>(
+                `/problems`,
+                {
+                  method: 'GET',
+                }
+              );
+      if (response.data?.success) {
+        console.log(response.data.data)
+        const problems = response.data.data;
+        problems.sort((a: any, b: any) => a.title.localeCompare(b.title));
+        setMainProblemCategories(problems);
+      }
+      // setMainProblemCategories(response);
+    } catch (error) {
+      console.error('Error fetching main problem categories:', error);
+    }
+  };
+
+  const getSubProblemCategories = async () => {
+    try {
+      const response = await request<ApiResponse<any>>(
+                `/problems/${formData.mainProblem.id}/sub-problems`,
+                {
+                  method: 'GET',
+                }
+              );
+      if (response.data?.success) {
+        const problems = response.data.data;
+
+        problems.sort((a: any, b: any) => a.title.localeCompare(b.title));
+        setSubProblemCategories(problems);
+      }
+      // setSubProblemCategories(response);
+    } catch (error) {
+      console.error('Error fetching sub problem categories:', error);
+    }
+  };
+
+  const getAllBehaviors = async () => {
+    try {
+      const response = await request<ApiResponse<any>>(
+                `/problems/${formData.mainProblem.id}/all-behaviors`,
+                {
+                  method: 'GET',
+                }
+              );
+      if (response.data?.success) {
+        const problems = response.data.data;
+
+        problems.sort((a: any, b: any) => a.title.localeCompare(b.title));
+        setRelationalBehaviors(problems);
+      }
+      // setSubProblemCategories(response);
+    } catch (error) {
+      console.error('Error fetching sub problem categories:', error);
+    }
+  };
+
+  useEffect(() => {
+    if (isSelectingMainProblem) {
+      setProblems(mainProblemCategories);
+      setFormField("mainProblem")
+    }
+    else if (isSelectingSubProblem) {
+      setProblems(subProblemCategories);
+      setFormField("subProblem")
+    }
+    else if (isSelectingRelationalBehavior) {
+      setProblems(relationalBehaviors);
+      setFormField("relationalBehaviors")
+    }
+  }, [isSelectingMainProblem, isSelectingSubProblem, isSelectingRelationalBehavior]);
+
+  useEffect(() => {
+    getMainProblemCategories();
+  }, []);
+
+  useEffect(()=>{
+    if (isMainProblemSelected) {
+      getSubProblemCategories();
+      updateFormData("subProblem", {})
+      getAllBehaviors()
+      updateFormData("relationalBehaviors", [])
+    }
+  },[isMainProblemSelected, setIsMainProblemSelected, formData.mainProblem])
+
+  const selectedLabel = useMemo(() => 
+    formData.mainProblem.title || 'Select Problem Type',
+    [formData.mainProblem]
+  );
+
+  const selectedSubLabel = useMemo(() => 
+    formData.subProblem.title || 'Select Sub Problem Type',
+    [formData.subProblem]
+  );
+
+  const selectedRelationalBehaviorLabel = useMemo(() => 
+    (formData.relationalBehaviors[0]?.title) || 'Select the specific issue',
+    [formData.relationalBehaviors]
+  );
+
+  const styles = StyleSheet.create({
+    container: {
+      flex: 1,
+      backgroundColor: colors.background,
+    } as ViewStyle,
+    scroll: {
+      flex: 1,
+    } as ViewStyle,
+    scrollContent: {
+      padding: spacing.md,
+    } as ViewStyle,
+    section: {
+      marginBottom: spacing.lg,
+    } as ViewStyle,
+    sectionTitle: {
+      fontSize: 18,
+      fontWeight: '600' as const,
+      color: colors.foreground,
+      marginBottom: spacing.md,
+    } as TextStyle,
+    optionsGrid: {
+      flexDirection: 'row' as const,
+      flexWrap: 'wrap' as const,
+      gap: spacing.sm,
+      marginBottom: spacing.md,
+    } as ViewStyle,
+    optionButton: {
+      flex: 1,
+      minWidth: '45%',
+      backgroundColor: colors.card,
+      borderWidth: 1,
+      borderColor: colors.border,
+      borderRadius: 8,
+      padding: spacing.md,
+      alignItems: 'center' as const,
+      minHeight: 60,
+      justifyContent: 'center' as const,
+    } as ViewStyle,
+    optionButtonSelected: {
+      backgroundColor: colors.primary,
+      borderColor: colors.primary,
+    } as ViewStyle,
+    optionText: {
+      fontSize: 14,
+      fontWeight: '500' as const,
+      color: colors.mutedForeground,
+      textAlign: 'center' as const,
+    } as TextStyle,
+    optionTextSelected: {
+      color: colors.primaryForeground,
+    } as TextStyle,
+    input: {
+      borderWidth: 1,
+      borderColor: colors.border,
+      borderRadius: 8,
+      padding: spacing.md,
+      fontSize: 16,
+      color: colors.foreground,
+      backgroundColor: colors.background,
+    } as ViewStyle,
+    textArea: {
+      minHeight: 120,
+      textAlignVertical: 'top' as const,
+    } as ViewStyle,
+    inputError: {
+      borderColor: colors.destructive,
+    } as ViewStyle,
+    errorText: {
+      fontSize: 12,
+      color: colors.destructive,
+      marginTop: 4,
+    } as TextStyle,
+  });
+
+  return (
+    <BottomSheetModalProvider>
+      <ScrollView style={styles.scroll} contentContainerStyle={styles.scrollContent}>
+      <View style={styles.section}>
+        <Text style={styles.sectionTitle}>Do you know the problem?</Text>
+        <View style={styles.optionsGrid}>
+          {[
+            { id: true, label: 'Yes, I know the problem' },
+            { id: false, label: 'No, I need help identifying' },
+          ].map((option) => (
+            <TouchableOpacity
+              key={option.id.toString()}
+              style={[
+                styles.optionButton,
+                formData.knowsProblem === option.id && styles.optionButtonSelected,
+              ]}
+              onPress={() => updateFormData('knowsProblem', option.id)}
+            >
+              <Text
+                style={[
+                  styles.optionText,
+                  formData.knowsProblem === option.id && styles.optionTextSelected,
+                ]}
+              >
+                {option.label}
+              </Text>
+            </TouchableOpacity>
+          ))}
+        </View>
+
+        {formData.knowsProblem && (
+            <>
+              <Text style={styles.sectionTitle}>Problem Category</Text>
+              <TouchableOpacity 
+                style={styles.input} 
+                onPress={() => {
+                  setSheetTitle("Select Problem Category")
+                  setSelectedValue(formData.mainProblem.title)
+                  setIsSelectingSubProblem(false)
+                  setIsSelectingMainProblem(true)
+                  setIsSelectingRelationalBehavior(false)
+                  problemSheetRef.current?.present()
+                }}
+              >
+                <Text style={{ color: formData.problemType ? colors.foreground : colors.mutedForeground }}>
+                  {selectedLabel}
+                </Text>
+              </TouchableOpacity>
+            </>
+          )}
+
+        {formData.knowsProblem && isMainProblemSelected && (
+          <>
+            <Text style={styles.sectionTitle}>Problem Sub-category</Text>
+            <TouchableOpacity 
+                  style={styles.input} 
+                  onPress={() =>{
+                      setSheetTitle("Select Problem Sub-category")
+                      setSelectedValue(formData.subProblem.title)
+                      setIsSelectingSubProblem(true)
+                      setIsSelectingMainProblem(false)
+                      setIsSelectingRelationalBehavior(false)
+                     problemSheetRef.current?.present()
+                  }}
+                >
+                  <Text style={{ color: formData.problemType ? colors.foreground : colors.mutedForeground }}>
+                    {selectedSubLabel}
+                  </Text>
+            </TouchableOpacity>
+
+            <Text style={styles.sectionTitle}>Select the specific issue</Text>
+            <TouchableOpacity 
+                  style={styles.input} 
+                  onPress={() =>{
+                      setSheetTitle("Select the specific issue")
+                      setSelectedValue(formData.relationalBehaviors[0]?.title)
+                      setIsSelectingRelationalBehavior(true)
+                      setIsSelectingSubProblem(false)
+                      setIsSelectingMainProblem(false)
+                     problemSheetRef.current?.present()
+                  }}
+                >
+                  <Text style={{ color: formData.problemType ? colors.foreground : colors.mutedForeground }}>
+                    {selectedRelationalBehaviorLabel}
+                  </Text>
+            </TouchableOpacity>
+          </>
+        )}
+
+
+        { !formData.knowsProblem && (
+          <>
+            <Text style={styles.sectionTitle}>
+                Describe the Problem
+              </Text>
+              <TextInput
+                style={[styles.input, styles.textArea, errors.problemDescription && styles.inputError]}
+                value={formData.problemDescription}
+                onChangeText={(value) => updateFormData('problemDescription', value)}
+                placeholder="Please describe what's happening with your device..."
+                multiline
+                textAlignVertical="top"
+              />
+              {errors.problemDescription && (
+                <Text style={styles.errorText}>{errors.problemDescription}</Text>
+              )}
+          </>
+        )}
+      </View>
+      <ProblemPickerSheet
+          title={sheetTitle}
+          options={problems}
+          selectedValue={selectedValue}
+          onSelect={(val: any) => {
+
+            if (isSelectingRelationalBehavior) {
+              val = [val];
+            }
+
+            updateFormData(formField as keyof FormData, val);
+            
+            if (formField === "mainProblem") {
+              setIsMainProblemSelected(true);
+            } else if (formField === "subProblem") {
+              setIsSubProblemSelected(true);
+            }
+            
+          }}
+          sheetRef={problemSheetRef as any}
+        />
+
+    </ScrollView>
+    </BottomSheetModalProvider>
+  );
+}
