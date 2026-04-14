@@ -4,7 +4,6 @@ import {
   Text,
   TouchableOpacity,
   TextInput,
-  FlatList,
   ActivityIndicator,
   Keyboard,
   Alert,
@@ -344,9 +343,6 @@ export function ContactStepScreen({
       maxHeight: 200,
       zIndex: 1000,
     } as ViewStyle,
-    suggestionsList: {
-      maxHeight: 180,
-    } as ViewStyle,
     suggestionItem: {
       padding: spacing.md,
       borderBottomWidth: 1,
@@ -497,25 +493,24 @@ export function ContactStepScreen({
       </View>
 
       {addressPredictions && addressPredictions.length > 0 && (
-        <View style={styles.suggestionsContainer}>
-          <FlatList
-            keyboardShouldPersistTaps="handled"
-            keyboardDismissMode="on-drag"
-            data={addressPredictions}
-            keyExtractor={(item) => item.place_id}
-            style={styles.suggestionsList}
-            renderItem={({ item }) => (
-              <TouchableOpacity
-                style={styles.suggestionItem}
-                onPress={() => onSelectPrediction(item)}
-              >
-                <Text style={styles.suggestionText} numberOfLines={1}>
-                  {item.description}
-                </Text>
-              </TouchableOpacity>
-            )}
-          />
-        </View>
+        <ScrollView
+          style={styles.suggestionsContainer}
+          nestedScrollEnabled
+          keyboardShouldPersistTaps="handled"
+          showsVerticalScrollIndicator
+        >
+          {addressPredictions.map((item: any, index: number) => (
+            <TouchableOpacity
+              key={item.place_id || `${item.description}-${index}`}
+              style={styles.suggestionItem}
+              onPress={() => onSelectPrediction(item)}
+            >
+              <Text style={styles.suggestionText} numberOfLines={1}>
+                {item.description}
+              </Text>
+            </TouchableOpacity>
+          ))}
+        </ScrollView>
       )}
 
       <View style={styles.miniMapContainer}>
@@ -559,7 +554,7 @@ export function ContactStepScreen({
 
   return (
     <ScrollView
-    
+      nestedScrollEnabled
       keyboardShouldPersistTaps="handled"
     >
       <View style={styles.container}>
