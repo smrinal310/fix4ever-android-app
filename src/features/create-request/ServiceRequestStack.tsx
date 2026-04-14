@@ -38,6 +38,10 @@ import {
 import { Button } from '../../core/components';
 import { useTheme } from '../../core/theme';
 import { useAuth } from '../../lib/contexts/auth-context';
+import {
+  getServiceAreaSummaryText,
+  isWithinServiceArea,
+} from './serviceArea';
 
 export interface FormData {
   requestType: "self" | 'other';
@@ -514,6 +518,19 @@ export function ServiceRequestStack({
 
       // Successfully got position
       const { latitude, longitude } = (position as any).coords;
+
+      if (!isWithinServiceArea(latitude, longitude)) {
+        setLocationError(
+          `Location is outside service area. We currently serve within ${getServiceAreaSummaryText()}.`
+        );
+        setIsGettingLocation(false);
+        Alert.alert(
+          'Location Not Serviceable',
+          `We currently serve locations within ${getServiceAreaSummaryText()} only.`
+        );
+        return;
+      }
+
       updateFormData('latitude', latitude);
       updateFormData('longitude', longitude);
 

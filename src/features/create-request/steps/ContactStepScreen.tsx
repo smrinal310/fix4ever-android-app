@@ -7,6 +7,7 @@ import {
   FlatList,
   ActivityIndicator,
   Keyboard,
+  Alert,
   StyleSheet,
   ViewStyle,
   TextStyle,
@@ -20,6 +21,11 @@ import { Input } from '../../../core/components';
 import Icon from 'react-native-vector-icons/Feather';
 
 import { FormData } from '../ServiceRequestStack';
+import {
+  DEFAULT_SERVICE_LOCATION,
+  getServiceAreaSummaryText,
+  isWithinServiceArea,
+} from '../serviceArea';
 
 
 interface ContactStepScreenProps {
@@ -56,10 +62,10 @@ export function ContactStepScreen({
   const { colors, spacing } = useTheme();
 
   const defaultRegion: Region = {
-    latitude: 20.5937,
-    longitude: 78.9629,
-    latitudeDelta: 8,
-    longitudeDelta: 8,
+    latitude: DEFAULT_SERVICE_LOCATION.latitude,
+    longitude: DEFAULT_SERVICE_LOCATION.longitude,
+    latitudeDelta: 0.9,
+    longitudeDelta: 0.9,
   };
 
   const [mapRegion, setMapRegion] = useState<Region>(defaultRegion);
@@ -80,7 +86,19 @@ export function ContactStepScreen({
     ? { latitude: formData.latitude, longitude: formData.longitude }
     : null;
 
-  const setMapPin = (latitude: number, longitude: number) => {
+  const showOutOfServiceAreaAlert = () => {
+    Alert.alert(
+      'Location Not Serviceable',
+      `We currently serve locations within ${getServiceAreaSummaryText()} only.`
+    );
+  };
+
+  const setMapPin = (latitude: number, longitude: number): boolean => {
+    if (!isWithinServiceArea(latitude, longitude)) {
+      showOutOfServiceAreaAlert();
+      return false;
+    }
+
     updateFormData('latitude', latitude);
     updateFormData('longitude', longitude);
     setMapRegion({
@@ -89,6 +107,7 @@ export function ContactStepScreen({
       latitudeDelta: 0.01,
       longitudeDelta: 0.01,
     });
+    return true;
   };
 
   const reverseGeocodeLatLng = async (latitude: number, longitude: number) => {
@@ -168,7 +187,10 @@ export function ContactStepScreen({
         return;
       }
 
-      setMapPin(latitude, longitude);
+      const wasPinUpdated = setMapPin(latitude, longitude);
+      if (!wasPinUpdated) {
+        return;
+      }
 
       const cityComponent = (first?.address_components || []).find((component: any) =>
         component?.types?.includes('locality') ||
@@ -208,7 +230,10 @@ export function ContactStepScreen({
       return;
     }
 
-    setMapPin(latitude, longitude);
+    const wasPinUpdated = setMapPin(latitude, longitude);
+    if (!wasPinUpdated) {
+      return;
+    }
     await reverseGeocodeLatLng(latitude, longitude);
   };
 
@@ -221,7 +246,10 @@ export function ContactStepScreen({
       return;
     }
 
-    setMapPin(latitude, longitude);
+    const wasPinUpdated = setMapPin(latitude, longitude);
+    if (!wasPinUpdated) {
+      return;
+    }
     await reverseGeocodeLatLng(latitude, longitude);
   };
 
@@ -518,7 +546,7 @@ export function ContactStepScreen({
       </View>
 
       <Text style={styles.mapHelp}>
-        Tip: Search, tap the map, drag the pin, or use current location.
+        Tip: Search, tap the map, drag the pin, or use current location in serviceable areas.
       </Text>
       {(isResolvingAddress || locationError) && (
         <Text style={styles.mapHint}>
