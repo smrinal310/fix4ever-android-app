@@ -327,14 +327,6 @@ export function ContactStepScreen({
     optionTextSelected: {
       color: colors.primaryForeground,
     } as TextStyle,
-    addressInputContainer: {
-      position: 'relative' as const,
-    } as ViewStyle,
-    loadingIndicator: {
-      position: 'absolute' as const,
-      right: 12,
-      top: 12,
-    } as ViewStyle,
     suggestionsContainer: {
       backgroundColor: colors.card,
       borderRadius: 8,
@@ -460,6 +452,27 @@ export function ContactStepScreen({
       color: colors.mutedForeground,
       textAlign: 'center' as const,
     } as TextStyle,
+    locationSuccessCard: {
+      marginTop: spacing.sm,
+      paddingVertical: spacing.sm,
+      paddingHorizontal: spacing.md,
+      borderRadius: 12,
+      backgroundColor: '#EAFBF0',
+      borderWidth: 1,
+      borderColor: '#9BE7B3',
+    } as ViewStyle,
+    locationSuccessTitle: {
+      fontSize: 14,
+      color: '#0B8A35',
+      fontWeight: '600' as const,
+      marginBottom: 2,
+      textAlign: 'center' as const,
+    } as TextStyle,
+    locationSuccessText: {
+      fontSize: 12,
+      color: '#0B8A35',
+      textAlign: 'center' as const,
+    } as TextStyle,
     mapHint: {
       marginTop: spacing.xs,
       fontSize: 12,
@@ -543,6 +556,14 @@ export function ContactStepScreen({
       <Text style={styles.mapHelp}>
         Tip: Search, tap the map, drag the pin, or use current location in serviceable areas.
       </Text>
+      {selectedCoordinate && (
+        <View style={styles.locationSuccessCard}>
+          <Text style={styles.locationSuccessTitle}>Location captured successfully!</Text>
+          <Text style={styles.locationSuccessText}>
+            Coordinates: {selectedCoordinate.latitude.toFixed(6)}, {selectedCoordinate.longitude.toFixed(6)}
+          </Text>
+        </View>
+      )}
       {(isResolvingAddress || locationError) && (
         <Text style={styles.mapHint}>
           {isResolvingAddress ? 'Resolving selected location...' : locationError}
@@ -629,43 +650,6 @@ export function ContactStepScreen({
               keyboardType="phone-pad"
               maxLength={10}
             />
-            <View style={styles.section}>
-              <Text style={styles.sectionTitle}>Address</Text>
-              <View style={styles.addressInputContainer}>
-                <TextInput
-                  style={[
-                    {
-                      borderWidth: 1,
-                      borderColor: colors.border,
-                      borderRadius: 8,
-                      padding: spacing.md,
-                      fontSize: 16,
-                      color: colors.foreground,
-                      backgroundColor: colors.background,
-                      height: 120,
-                    },
-                    errors.address && { borderColor: colors.destructive },
-                  ]}
-                  value={formData.address}
-                  onChangeText={onAddressChange}
-                  placeholder="Enter your complete address"
-                  multiline
-                  textAlignVertical="top"
-                />
-              </View>
-              {errors.address && (
-                <Text style={{ color: colors.destructive, fontSize: 12, marginTop: 4 }}>
-                  {errors.address}
-                </Text>
-              )}
-            </View>
-            <Input
-              label="City"
-              value={formData.city}
-              onChangeText={(value: string) => handleTextChange('city', value)}
-              error={errors.city}
-              placeholder="Enter your city"
-            />
             {renderLocationPicker()}
           </>
         ) : (
@@ -685,43 +669,6 @@ export function ContactStepScreen({
               placeholder="Enter beneficiary's 10-digit phone number"
               keyboardType="phone-pad"
               maxLength={10}
-            />
-            <View style={styles.section}>
-              <Text style={styles.sectionTitle}>Address</Text>
-              <View style={styles.addressInputContainer}>
-                <TextInput
-                  style={[
-                    {
-                      borderWidth: 1,
-                      borderColor: colors.border,
-                      borderRadius: 8,
-                      padding: spacing.md,
-                      fontSize: 16,
-                      color: colors.foreground,
-                      backgroundColor: colors.background,
-                      height: 120,
-                    },
-                    errors.address && { borderColor: colors.destructive },
-                  ]}
-                  value={formData.address}
-                  onChangeText={onAddressChange}
-                  placeholder="Enter complete address"
-                  multiline
-                  textAlignVertical="top"
-                />
-              </View>
-              {errors.address && (
-                <Text style={{ color: colors.destructive, fontSize: 12, marginTop: 4 }}>
-                  {errors.address}
-                </Text>
-              )}
-            </View>
-            <Input
-              label="City"
-              value={formData.city}
-              onChangeText={(value: string) => handleTextChange('city', value)}
-              error={errors.city}
-              placeholder="Enter city"
             />
             {renderLocationPicker()}
           </>
