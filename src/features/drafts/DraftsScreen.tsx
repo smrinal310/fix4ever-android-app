@@ -51,11 +51,13 @@ const formatDateTime = (value?: string): string => {
 };
 
 const toDraftCard = (draft: DraftServiceRequest): DraftCard => {
-  const completedStep = typeof draft.currentStep === 'number' ? draft.currentStep + 1 : 0;
-  const completionPercentage = Math.max(
-    5,
-    Math.min(100, Math.round((completedStep / STEP_COUNT) * 100))
-  );
+  const backendCompletion = Number(draft.completionPercentage);
+  const completionPercentage = Number.isFinite(backendCompletion)
+    ? Math.max(0, Math.min(100, Math.round(backendCompletion)))
+    : (() => {
+        const completedStep = typeof draft.currentStep === 'number' ? draft.currentStep + 1 : 0;
+        return Math.max(0, Math.min(100, Math.round((completedStep / STEP_COUNT) * 100)));
+      })();
   const titleParts = [draft.brand, draft.model].filter(Boolean);
   const title = draft.title || (titleParts.length ? titleParts.join(' ') : 'Untitled Draft');
 
@@ -321,7 +323,7 @@ export function DraftsScreen() {
           </View>
         ) : (
           drafts.map((draft) => (
-            <TouchableOpacity key={draft.id} style={styles.draftCard}>
+            <View key={draft.id} style={styles.draftCard}>
               <View style={styles.draftHeader}>
                 <Text style={styles.draftTitle}>{draft.title}</Text>
                 <View
@@ -385,7 +387,7 @@ export function DraftsScreen() {
                   </TouchableOpacity>
                 </View>
               </View>
-            </TouchableOpacity>
+            </View>
           ))
         )}
       </ScrollView>
