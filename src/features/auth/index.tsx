@@ -91,6 +91,10 @@ export default function AuthStack({ route }: { route: { params?: { screen?: stri
                 name="Account"
                 options={{
                     headerRight: () => <ThemeSelector isCompact={true} />,
+                    contentStyle: {
+                        backgroundColor: isDark ? '#242D3B' : colors.background,
+                    },
+                    navigationBarColor: isDark ? '#242D3B' : colors.background,
                 }}
             >
                 {(props) => (

@@ -1,6 +1,6 @@
 import React from 'react';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Image } from 'react-native';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useTheme } from '../../core/theme';
 import MobileLaptop from '../../assets/icons/mobile-laptop.svg';
 import { useAuth } from '../../lib/contexts/auth-context';
@@ -33,10 +33,15 @@ export function AccountScreen({ onLogout }: AccountScreenProps) {
       flex: 1,
       backgroundColor: containerBg,
     },
+    scroll: {
+      flex: 1,
+      backgroundColor: containerBg,
+    },
     content: {
+      flexGrow: 1,
       paddingHorizontal: spacing.lg,
       paddingTop: spacing.md,
-      paddingBottom: Math.max(insets.bottom + spacing.xl, spacing.xxl),
+      paddingBottom: spacing.xxl,
       alignItems: 'center',
     },
     logoCircle: {
@@ -68,8 +73,8 @@ export function AccountScreen({ onLogout }: AccountScreenProps) {
       fontFamily: fonts.bold,
     },
     logoIcon: {
-      width: 120,
-      height: 120,
+      width: 150,
+      height: 150,
     },
     title: {
       fontSize: 48,
@@ -142,14 +147,17 @@ export function AccountScreen({ onLogout }: AccountScreenProps) {
     illustrationWrap: {
       width: '100%',
       alignItems: 'center',
+      height: 170,
+      overflow: 'hidden',
       marginTop: spacing.xs,
       opacity: 0.7,
     },
   });
 
   return (
-    <View style={styles.container}>
+    <SafeAreaView style={styles.container} edges={['bottom']}>
       <ScrollView
+        style={styles.scroll}
         contentContainerStyle={styles.content}
         showsVerticalScrollIndicator={false}
       >
@@ -184,9 +192,9 @@ export function AccountScreen({ onLogout }: AccountScreenProps) {
           <Text style={styles.logoutText}>Log out</Text>
         </TouchableOpacity>
         <View style={styles.illustrationWrap}>
-          <MobileLaptop width={600} height={200} />
+          <MobileLaptop width={600} height={190} />
         </View>
       </ScrollView>
-    </View>
+    </SafeAreaView>
   );
 }
