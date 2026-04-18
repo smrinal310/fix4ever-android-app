@@ -11,8 +11,7 @@ import {
 import {createNativeStackNavigator} from '@react-navigation/native-stack';
 import { request } from '../../core/api';
 import { useRoute } from '@react-navigation/native';
-import Geolocation from '@react-native-community/geolocation';
-import RNAndroidLocationEnabler from 'react-native-android-location-enabler';
+import Geolocation from 'react-native-geolocation-service';
 import axios from 'axios';
 import Config from 'react-native-config';
 
@@ -729,12 +728,12 @@ export function ServiceRequestStack({
   // Location permission and geolocation
   const requestLocationPermission = async (): Promise<boolean> => {
     if (Platform.OS === 'ios') {
-      return new Promise((resolve) => {
-        Geolocation.requestAuthorization(
-          () => resolve(true),
-          () => resolve(false)
-        );
-      });
+      try {
+        const status = await Geolocation.requestAuthorization('whenInUse');
+        return status === 'granted';
+      } catch (error) {
+        return false;
+      }
     } else {
       try {
         const granted = await PermissionsAndroid.request(
@@ -827,25 +826,6 @@ export function ServiceRequestStack({
         return;
       }
 
-      if (Platform.OS === 'android') {
-        try {
-          await RNAndroidLocationEnabler.promptForEnableLocationIfNeeded({
-            interval: 10000,
-            fastInterval: 5000,
-          });
-        } catch (enableLocationError: any) {
-          setLocationError('Please turn on location services to continue');
-          setIsGettingLocation(false);
-          return;
-        }
-      }
-
-      // Configure geolocation settings for better reliability
-      Geolocation.setRNConfiguration({
-        skipPermissionRequests: false,
-        authorizationLevel: 'whenInUse',
-      });
-
       // Try a fast cached position first, then fall back to a live fix.
       const tryGetLocation = (highAccuracy: boolean) => {
         return new Promise((resolve, reject) => {
@@ -856,6 +836,8 @@ export function ServiceRequestStack({
               enableHighAccuracy: highAccuracy,
               timeout: highAccuracy ? 7000 : 2500,
               maximumAge: highAccuracy ? 5000 : 60000,
+              showLocationDialog: true,
+              forceRequestLocation: true,
             }
           );
         });
@@ -904,7 +886,15 @@ export function ServiceRequestStack({
         [{ text: 'OK' }]
       );
     } catch (error) {
-      setLocationError('Failed to get location');
+      const locationError = error as { code?: number };
+
+      if (locationError?.code === 5) {
+        setLocationError('Please turn on location services to continue');
+      } else if (locationError?.code === 1) {
+        setLocationError('Location permission denied');
+      } else {
+        setLocationError('Failed to get location');
+      }
       setIsGettingLocation(false);
     }
   };
