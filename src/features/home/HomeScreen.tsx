@@ -135,7 +135,27 @@ export function HomeScreen( { navigation }: HomeScreenProps) {
           right: 0,
           bottom: -80,
           alignItems: 'center',
-          opacity: isDark ? 0.5 : 0.7, // Increased opacity for better visibility
+          opacity: isDark ? 0.5 : 0.7,
+        },
+        leftDecoration: {
+          position: 'absolute',
+          left: -16,
+          top: insets.top + spacing.xl + spacing.xxl,
+          opacity: isDark ? 0.35 : 0.5,
+        },
+        leftDecorationImage: {
+          width: 145,
+          height: 190,
+        },
+        rightDecoration: {
+          position: 'absolute',
+          right: -20,
+          bottom: 60,
+          opacity: isDark ? 0.35 : 0.5,
+        },
+        rightDecorationImage: {
+          width: 120,
+          height: 160,
         },
         hero: {
           alignItems: 'center',
@@ -410,7 +430,7 @@ export function HomeScreen( { navigation }: HomeScreenProps) {
           color: mutedText,
         },
       }),
-    [colors, spacing, borderRadius, typography, isDark, primaryBlue, headingColor, mutedText, fonts]
+    [colors, spacing, borderRadius, typography, isDark, primaryBlue, headingColor, mutedText, fonts, insets]
   );
 
   return (
@@ -440,6 +460,17 @@ export function HomeScreen( { navigation }: HomeScreenProps) {
         {/* Background Illustration - Fixed at bottom */}
         <View style={styles.illustrationBehind} pointerEvents="none">
           <MobileLaptop width={600} height={220} />
+        </View>
+        {/* Left decoration at logo height */}
+        <View style={styles.leftDecoration} pointerEvents="none">
+          <Image
+            source={require('../../assets/icons/icon5.png')}
+            style={styles.leftDecorationImage}
+            resizeMode="contain"
+          />
+        </View>
+        <View style={styles.rightDecoration} pointerEvents="none">
+          <Image source={require('../../assets/icons/icon3.png')} style={styles.rightDecorationImage} resizeMode="contain" />
         </View>
 
         <ScrollView

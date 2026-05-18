@@ -10,7 +10,6 @@ import {
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useTheme } from '../theme';
-import { ThemeSelector } from './ThemeSelector';
 import Icon from 'react-native-vector-icons/Feather';
 import type { User } from '../api/auth';
 
@@ -36,7 +35,7 @@ export function AppBar({
   onOpenTerms,
 }: AppBarProps) {
   const insets = useSafeAreaInsets();
-  const { colors, spacing, typography, themeMode, setThemeMode } = useTheme();
+  const { colors, spacing, typography } = useTheme();
 
   const [menuOpen, setMenuOpen] = useState(false);
   const menuAnim = useRef(new Animated.Value(0)).current;
@@ -77,15 +76,6 @@ export function AppBar({
           
           {isLoggedIn ? (
             <>
-              <View style={[styles.menuItem, { paddingVertical: 8 }]}>
-                <ThemeSelector
-                  currentMode={themeMode}
-                  onModeChange={(mode) => {
-                    setThemeMode(mode);
-                  }}
-                  isCompact={false}
-                />
-              </View>
                     <TouchableOpacity
                 onPress={onNotificationsPress}
                 activeOpacity={0.8}
